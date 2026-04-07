@@ -1,0 +1,11 @@
+# Notas privadas con información de infraestructura
+arquitectura.md
+onboarding-dispositivo.md
+tareas.md
+referencias.md
+
+# Archivos de Obsidian y sistema
+.obsidian/
+.stfolder/
+.stignore
+*.canvas
