@@ -1,6 +1,6 @@
 # Scripts de automatización — cerebro
 
-Scripts que reemplazan los workflows de n8n. Se ejecutan via cron en el servidor principal.
+Scripts de automatización del sistema. Se ejecutan via cron en el servidor principal.
 
 ## Estructura
 

@@ -11,14 +11,14 @@ Activo — en construcción iterativa
 ## Stack
 
 - **Agente IA**: OpenClaw (Docker)
-- **Automatización**: Scripts Python/Bash ejecutados via cron
+- **Automatización**: Scripts Python/Bash ejecutados via cron (ver `scripts/`)
 - **Vault de notas**: Obsidian + Syncthing
 - **Interfaz**: Telegram bot
 - **LLM**: Kimi K2.5
 
 ## Scripts
 
-Los scripts en `scripts/` reemplazan workflows anteriores de n8n. Cada script tiene una función específica y se ejecuta mediante cron en el servidor principal.
+Los scripts en `scripts/` gestionan las automatizaciones del sistema. Cada script tiene una función específica y se ejecuta mediante cron en el servidor principal.
 
 Ver `scripts/README.md` para detalles de configuración y uso.
 
