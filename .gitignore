@@ -4,6 +4,10 @@ onboarding-dispositivo.md
 tareas.md
 referencias.md
 
+# Variables de entorno reales (solo subir los .example)
+profiles/envs/*.env
+!profiles/envs/*.env.example
+
 # Archivos de Obsidian y sistema
 .obsidian/
 .stfolder/

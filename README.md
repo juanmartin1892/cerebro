@@ -16,11 +16,26 @@ Activo — en construcción iterativa
 - **Interfaz**: Telegram bot
 - **LLM**: Kimi K2.5
 
-## Scripts
+## Estructura del repositorio
 
-Los scripts en `scripts/` gestionan las automatizaciones del sistema. Cada script tiene una función específica y se ejecuta mediante cron en el servidor principal.
+```
+cerebro/
+├── CLAUDE.md              # Configuración de Claude Code para este proyecto
+├── specs/                 # Especificación de cada script (una por script)
+│   └── _template.md       # Plantilla para nuevas specs
+├── scripts/               # Implementaciones (Python/Bash)
+├── profiles/
+│   ├── behaviors/         # Perfiles de comportamiento de Claude Code
+│   └── envs/              # Plantillas de variables de entorno por entorno
+└── .claude/commands/      # Comandos slash disponibles en Claude Code
+```
 
-Ver `scripts/README.md` para detalles de configuración y uso.
+## Flujo de trabajo
+
+1. Describir el script con `/escribir-spec`
+2. Implementarlo con `/crear-script`
+3. Revisarlo con `/revisar-script`
+4. Entregar cambios con `/worktree-deliver`
 
 ## Última actualización
 
