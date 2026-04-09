@@ -24,7 +24,7 @@ Genera cada domingo un menú semanal orientativo con almuerzo y cena para 7 día
 
 | Variable | Descripción | Valor por defecto |
 |----------|-------------|-------------------|
-| `LLM_MODEL` | Modelo a usar en OpenCode Zen | `claude-haiku-4-5-20251001` |
+| `LLM_MODEL` | Modelo a usar en OpenCode Zen | `claude-haiku-4-5` |
 | `LOG_LEVEL` | Nivel de logging | `INFO` |
 
 ### Archivos de entrada (leídos en cada ejecución)
@@ -80,10 +80,7 @@ created: YYYY-MM-DD
 
 ## Dependencias Python
 
-```
-# requirements
-anthropic>=0.40
-```
+Solo stdlib — no requiere instalar paquetes externos. Usa `urllib.request` para la llamada HTTP al endpoint `/messages` de OpenCode Zen.
 
 ## Comportamiento ante errores
 

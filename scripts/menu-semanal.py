@@ -18,7 +18,8 @@ import unicodedata
 from datetime import date, timedelta
 from pathlib import Path
 
-import anthropic
+import urllib.request
+import urllib.error
 
 logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO"),
@@ -158,25 +159,37 @@ El array "recetas_nuevas" debe tener exactamente 2 elementos.
 
 
 def llamar_ia(prompt: str, api_key: str, model: str) -> dict:
-    """Llama a OpenCode Zen y devuelve el JSON parseado."""
-    client = anthropic.Anthropic(
-        api_key=api_key,
-        base_url="https://opencode.ai/zen/v1",
+    """Llama a OpenCode Zen (endpoint /messages) y devuelve el JSON parseado."""
+    payload = json.dumps({
+        "model": model,
+        "max_tokens": 4096,
+        "messages": [{"role": "user", "content": prompt}],
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://opencode.ai/zen/v1/messages",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "User-Agent": "cerebro-menu-semanal/1.0",
+        },
+        method="POST",
     )
+
     try:
-        mensaje = client.messages.create(
-            model=model,
-            max_tokens=4096,
-            messages=[{"role": "user", "content": prompt}],
-        )
-    except anthropic.APIStatusError as e:
-        log.error("Error HTTP %s de la API: %s", e.status_code, e.message)
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            respuesta = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        cuerpo = e.read().decode("utf-8", errors="replace")
+        log.error("Error HTTP %s de la API: %s", e.code, cuerpo)
         sys.exit(1)
-    except anthropic.APIConnectionError as e:
-        log.error("Error de conexión con la API: %s", e)
+    except urllib.error.URLError as e:
+        log.error("Error de conexión con la API: %s", e.reason)
         sys.exit(1)
 
-    contenido = mensaje.content[0].text.strip()
+    contenido = respuesta["content"][0]["text"].strip()
 
     # Limpiar posibles bloques de código markdown que la IA incluya igualmente
     if contenido.startswith("```"):
@@ -266,7 +279,7 @@ def actualizar_index(index_path: Path, recetas_nuevas: list[dict]) -> None:
 def main() -> None:
     api_key = os.environ.get("LLM_API_KEY")
     vault_path_str = os.environ.get("VAULT_PATH")
-    model = os.environ.get("LLM_MODEL", "claude-haiku-4-5-20251001")
+    model = os.environ.get("LLM_MODEL", "claude-haiku-4-5")
 
     if not api_key:
         log.error("LLM_API_KEY no está definida")
