@@ -1,0 +1,14 @@
+{$TAILSCALE_HOST}:3100 {
+	tls /certs/cerebro.crt /certs/cerebro.key
+
+	header {
+		Access-Control-Allow-Origin "https://claude.ai"
+		Access-Control-Allow-Methods "GET, POST, OPTIONS"
+		Access-Control-Allow-Headers "Content-Type, Authorization, Mcp-Session-Id"
+	}
+
+	@options method OPTIONS
+	respond @options 204
+
+	reverse_proxy filesystem-mcp:3000
+}
