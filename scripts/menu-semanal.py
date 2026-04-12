@@ -290,9 +290,13 @@ def main() -> None:
 
     vault = Path(vault_path_str)
 
-    # Calcular lunes de la semana en curso
+    # Calcular el lunes objetivo: si hoy es domingo, es el lunes de mañana;
+    # si no, es el lunes de la semana en curso.
     hoy = date.today()
-    lunes = hoy - timedelta(days=hoy.weekday())
+    if hoy.weekday() == 6:  # domingo
+        lunes = hoy + timedelta(days=1)
+    else:
+        lunes = hoy - timedelta(days=hoy.weekday())
 
     # Comprobar idempotencia
     menu_dir = vault / "inbox" / "menus"
