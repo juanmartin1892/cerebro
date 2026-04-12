@@ -1,0 +1,23 @@
+services:
+
+  filesystem-mcp:
+    image: node:20-alpine
+    container_name: filesystem-mcp
+    command: ["sh", "-c", "npx -y mcp-proxy --port 3000 --server sse -- npx -y @modelcontextprotocol/server-filesystem /vault"]
+    volumes:
+      - ${VAULT_PATH}:/vault
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: mcp-caddy
+    environment:
+      - TAILSCALE_HOST=${TAILSCALE_HOST}
+    ports:
+      - "${TAILSCALE_IP}:3100:3100"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - /etc/ssl/tailscale:/certs:ro
+    depends_on:
+      - filesystem-mcp
+    restart: unless-stopped
