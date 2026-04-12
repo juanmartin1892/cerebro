@@ -1,7 +1,7 @@
 Revisa el script `scripts/$ARGUMENTS.py` contra su spec y las convenciones del proyecto.
 
 Sigue estos pasos:
-1. Lee `specs/$ARGUMENTS.md` para entender el contrato del script.
+1. Lee `docs/specs/$ARGUMENTS.md` para entender el contrato del script.
 2. Lee `scripts/$ARGUMENTS.py`.
 3. Comprueba:
    - ¿El script implementa todo lo que describe la spec?

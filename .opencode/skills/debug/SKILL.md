@@ -40,5 +40,5 @@ ping -c 3 servicio.com
 
 ## 5. Antes de hacer cambios
 
-- Leer la spec en `specs/[nombre].md` para confirmar el comportamiento esperado
+- Leer la spec en `docs/specs/[nombre].md` para confirmar el comportamiento esperado
 - No cambiar el comportamiento del script para "esquivar" el error — encontrar la causa raíz

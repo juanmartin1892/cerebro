@@ -1,6 +1,6 @@
 Empaqueta los cambios del worktree actual como un pull request.
 
-Sigue la especificación en `specs/worktree-deliver.md` para el formato de mensajes.
+Sigue la especificación en `docs/specs/worktree-deliver.md` para el formato de mensajes.
 
 Pasos:
 1. Verifica que estás en un worktree (no en `main`). Si estás en `main`, avisa y detente.

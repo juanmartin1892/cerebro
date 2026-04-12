@@ -22,12 +22,13 @@ Activo — en construcción iterativa
 cerebro/
 ├── CLAUDE.md              # Configuración de Claude Code para este proyecto
 ├── OPENCODE.md            # Configuración de OpenCode para este proyecto
-├── specs/                 # Especificación de cada script (una por script)
-│   └── _template.md       # Plantilla para nuevas specs
+├── docs/
+│   ├── specs/             # Especificación de cada script (una por script)
+│   │   └── _template.md   # Plantilla para nuevas specs
+│   └── profiles/
+│       ├── behaviors/     # Perfiles de comportamiento de Claude Code
+│       └── envs/          # Plantillas de variables de entorno por entorno
 ├── scripts/               # Implementaciones (Python/Bash)
-├── profiles/
-│   ├── behaviors/         # Perfiles de comportamiento de Claude Code
-│   └── envs/              # Plantillas de variables de entorno por entorno
 ├── .claude/commands/      # Comandos slash disponibles en Claude Code
 └── .opencode/commands/    # Comandos slash disponibles en OpenCode
 ```

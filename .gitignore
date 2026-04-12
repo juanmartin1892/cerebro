@@ -1,8 +1,5 @@
 # Notas privadas con información de infraestructura
-arquitectura.md
-onboarding-dispositivo.md
-tareas.md
-referencias.md
+internal-docs
 
 # Variables de entorno reales (solo subir los .example)
 profiles/envs/*.env
