@@ -15,6 +15,12 @@
 
 [cron - VPS]
   └── scripts/Python → logs /var/log/cerebro/
+
+[Acceso SSH al VPS]
+  ├── Agentes IA (Claude Code / OpenCode)
+  │     └── usuario restringido (rbash, sudoers acotados, solo clave SSH)
+  └── Usuario humano
+        └── usuario principal (clave SSH + TOTP)
 ```
 
 ## Decisiones tomadas
@@ -54,3 +60,25 @@
 - **Qué**: scripts Python en `scripts/`, ejecutados por cron en el VPS, logs en `/var/log/cerebro/`
 - **Por qué**: más simples que n8n, versionables en git, sin dependencias de UI ni contenedores adicionales, alineados con el perfil técnico del proyecto
 - **Proceso**: spec en `specs/` → implementación en `scripts/` → cron entry → logs
+
+### [2026-04-12] Usuario SSH restringido para agentes IA
+- **Qué**: usuario dedicado con shell restringido (`rbash`) y sudoers mínimos para los agentes IA (Claude Code, OpenCode)
+- **Por qué**: blast radius acotado si un agente se comporta mal; revocación inmediata borrando su `authorized_keys`; accesos auditables en `auth.log` diferenciados del usuario principal; principle of least privilege
+- **Alternativas descartadas**: usuario principal compartido con los agentes (sin aislamiento, sin auditoría diferenciada)
+
+### [2026-04-12] Stack de observabilidad: Prometheus + Grafana + Loki
+- **Qué**: Prometheus (métricas) + node_exporter + Loki (logs) + Promtail (recolector) + Grafana (visualización), desplegados en Docker en el VPS bajo `infra/observability/`
+- **Por qué**: suficiente para el caso de uso (VPS personal, logs SSH, métricas del sistema) sin el coste en RAM de Elastic (~1.5GB vs ~600MB). Grafana tiene integración OIDC nativa con Keycloak, que es el objetivo de la Fase 1.
+- **Alternativa descartada**: ELK stack (Elasticsearch + Kibana) — excesivo en RAM para un CPX22, y Kibana requiere licencia X-Pack para OIDC
+- **Acceso**: Grafana en `http://<tailscale-ip>:3001`, solo dentro de Tailscale
+- **Configuración**: `infra/observability/` en el repo. IP y contraseña en `.env` (gitignored)
+- **Estado**: operativo — métricas de CPU y logs SSH (`auth_log`) fluyendo a Grafana
+
+### [2026-04-12] SearXNG eliminado de OpenClaw
+- **Qué**: contenedor `searxng` y volumen `searxng_data` eliminados del docker-compose de OpenClaw
+- **Por qué**: OpenClaw usa Brave Search (plugin activo con API key) — SearXNG estaba instalado por el script de setup por defecto pero no se usaba, consumiendo ~100MB RAM sin utilidad
+
+### [2026-04-12] 2FA TOTP para el usuario principal
+- **Qué**: autenticación en dos pasos para el usuario humano: clave SSH + código TOTP via `libpam-google-authenticator`; agentes usan solo clave (sin TOTP, no pueden interactuar con prompts)
+- **Por qué**: la clave SSH puede verse comprometida (máquina robada, clave exportada); TOTP añade un segundo factor independiente del dispositivo
+- **Alternativas descartadas**: solo clave SSH (factor único); contraseña + TOTP sin clave (menos seguro que publickey)

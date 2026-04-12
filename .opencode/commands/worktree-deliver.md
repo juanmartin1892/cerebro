@@ -4,6 +4,7 @@ Sigue la especificación en `docs/specs/worktree-deliver.md` para el formato de 
 
 Pasos:
 1. Verifica que estás en un worktree (no en `main`). Si estás en `main`, avisa y detente.
+2. Ejecuta `/check-sensitive` antes de continuar. Si detecta información sensible, detente y corrígela antes de seguir.
 2. Muestra los cambios pendientes con `git status` y `git diff --stat`.
 3. Analiza el contenido con `git diff` para entender qué cambios se introducen.
 4. Propón un mensaje de PR siguiendo el formato de la spec:
