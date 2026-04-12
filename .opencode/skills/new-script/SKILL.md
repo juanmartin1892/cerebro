@@ -4,7 +4,7 @@ Cuando se crea un nuevo script, seguir este proceso:
 
 ## 1. Leer la spec completa
 
-Antes de escribir una sola línea de código, leer `specs/[nombre].md` en su totalidad. Si la spec no existe, detener y pedir al usuario que ejecute `/escribir-spec` primero.
+Antes de escribir una sola línea de código, leer `docs/specs/[nombre].md` en su totalidad. Si la spec no existe, detener y pedir al usuario que ejecute `/escribir-spec` primero.
 
 ## 2. Estructura obligatoria del script Python
 

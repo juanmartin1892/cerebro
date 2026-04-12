@@ -6,11 +6,11 @@ Cuando se refactoriza un script existente, respetar estas reglas.
 
 1. **No cambiar el comportamiento observable**: el script debe producir exactamente los mismos efectos secundarios y salidas tras el refactor.
 2. **Mantener compatibilidad con el crontab**: no cambiar el nombre del script ni sus variables de entorno requeridas sin actualizar el crontab.
-3. **Actualizar la spec si la interfaz cambia**: si el refactor cambia variables de entorno, entradas o salidas, actualizar `specs/[nombre].md` antes o junto con el código.
+3. **Actualizar la spec si la interfaz cambia**: si el refactor cambia variables de entorno, entradas o salidas, actualizar `docs/specs/[nombre].md` antes o junto con el código.
 
 ## Proceso
 
-1. Leer la spec en `specs/[nombre].md` para entender el contrato del script.
+1. Leer la spec en `docs/specs/[nombre].md` para entender el contrato del script.
 2. Leer el script completo antes de proponer cambios.
 3. Refactorizar manteniendo el contrato.
 4. Verificar que el script sigue siendo ejecutable sin argumentos.
