@@ -4,6 +4,8 @@ internal-docs
 # Variables de entorno reales (solo subir los .example)
 profiles/envs/*.env
 !profiles/envs/*.env.example
+infra/**/.env
+!infra/**/.env.example
 
 # Archivos de Obsidian y sistema
 .obsidian/

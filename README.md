@@ -23,6 +23,7 @@ cerebro/
 ├── CLAUDE.md              # Configuración de Claude Code para este proyecto
 ├── OPENCODE.md            # Configuración de OpenCode para este proyecto
 ├── docs/
+│   ├── arquitectura.md    # Diagrama del sistema y decisiones de diseño
 │   ├── specs/             # Especificación de cada script (una por script)
 │   │   └── _template.md   # Plantilla para nuevas specs
 │   └── profiles/
@@ -42,4 +43,4 @@ cerebro/
 
 ## Última actualización
 
-2026-04-07
+2026-04-12

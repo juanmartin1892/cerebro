@@ -23,6 +23,7 @@ Sistema de automatización personal. Scripts Python/Bash que corren via cron en 
 @docs/profiles/behaviors/new-script.md
 @docs/profiles/behaviors/debug.md
 @docs/profiles/behaviors/refactor.md
+@docs/profiles/behaviors/security.md
 
 ## Convenciones de código
 
@@ -42,6 +43,7 @@ Sistema de automatización personal. Scripts Python/Bash que corren via cron en 
 | `/revisar-script [nombre]` | Revisa el script contra su spec |
 | `/lint` | Ejecuta flake8 + black sobre `scripts/` |
 | `/worktree-deliver` | Empaqueta cambios como PR con commit convencional |
+| `/check-sensitive` | Revisa cambios pendientes en busca de información sensible |
 
 ## Entornos
 
@@ -49,3 +51,9 @@ Los scripts corren en dos entornos. Ver `docs/profiles/envs/` para las variables
 
 - **vps**: Servidor principal (Ubuntu 24.04, red Tailscale)
 - **local**: Estación de trabajo para desarrollo y pruebas
+
+## Acceso SSH al VPS
+
+Cuando necesites conectarte al VPS, usa **siempre** el alias de agente definido en `~/.ssh/config` para este proyecto. Ese alias conecta con un usuario de shell restringido y privilegios mínimos.
+
+**Nunca uses el alias del usuario principal** — tiene acceso completo y requiere 2FA.
