@@ -6,6 +6,8 @@ services:
     command: ["sh", "-c", "npx -y mcp-proxy --port 3000 --server sse -- npx -y @modelcontextprotocol/server-filesystem /vault"]
     volumes:
       - ${VAULT_PATH}:/vault
+    ports:
+      - "127.0.0.1:3000:3000"
     restart: unless-stopped
 
   grafana-mcp:

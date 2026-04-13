@@ -4,22 +4,24 @@ menu-semanal.py — Genera un menú semanal orientativo cada domingo usando rece
 
 Lee las recetas disponibles, productos de temporada y recomendaciones nutricionales,
 llama a la IA (OpenCode Zen) una sola vez para generar el menú y dos recetas nuevas,
-y escribe los resultados como notas Obsidian en el vault.
+y escribe los resultados como notas Obsidian en el vault via MCP.
 
-Cron: 0 9 * * 0  /path/to/scripts/menu-semanal.py >> /var/log/cerebro/menu-semanal.log 2>&1
+Cron: 0 9 * * 0  docker run --rm --network host --env-file /path/to/infra/scripts/.env cerebro/menu-semanal >> /var/log/cerebro/menu-semanal.log 2>&1
 """
 
+import asyncio
 import json
 import logging
 import os
 import re
 import sys
 import unicodedata
-from datetime import date, timedelta
-from pathlib import Path
-
-import urllib.request
 import urllib.error
+import urllib.request
+from datetime import date, timedelta
+
+from mcp import ClientSession
+from mcp.client.sse import sse_client
 
 logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO"),
@@ -41,13 +43,6 @@ def slugify(texto: str) -> str:
     lower = ascii_.lower()
     limpio = re.sub(r"[^\w\s-]", "", lower)
     return re.sub(r"[\s_]+", "-", limpio).strip("-")
-
-
-def leer_archivo(ruta: Path) -> str:
-    if not ruta.exists():
-        log.error("Archivo no encontrado: %s", ruta)
-        sys.exit(1)
-    return ruta.read_text(encoding="utf-8")
 
 
 def extraer_recetas_del_index(index_md: str) -> list[dict]:
@@ -261,35 +256,55 @@ def entrada_index(receta: dict) -> str:
     )
 
 
-def actualizar_index(index_path: Path, recetas_nuevas: list[dict]) -> None:
+# ── MCP helpers ──────────────────────────────────────────────────────────────
+
+async def mcp_read(session: ClientSession, path: str) -> str:
+    """Lee un archivo via MCP. Termina con exit 1 si no existe o hay error."""
+    result = await session.call_tool("read_file", {"path": path})
+    if result.isError:
+        log.error("No se pudo leer via MCP: %s", path)
+        sys.exit(1)
+    return result.content[0].text
+
+
+async def mcp_exists(session: ClientSession, path: str) -> bool:
+    """Comprueba si un archivo existe via MCP."""
+    result = await session.call_tool("get_file_info", {"path": path})
+    return not result.isError
+
+
+async def mcp_write(session: ClientSession, path: str, content: str) -> None:
+    """Escribe un archivo via MCP."""
+    result = await session.call_tool("write_file", {"path": path, "content": content})
+    if result.isError:
+        log.error("No se pudo escribir via MCP: %s", path)
+        sys.exit(1)
+
+
+async def mcp_mkdir(session: ClientSession, path: str) -> None:
+    """Crea un directorio via MCP (idempotente)."""
+    await session.call_tool("create_directory", {"path": path})
+
+
+async def actualizar_index(
+    session: ClientSession, index_path: str, recetas_nuevas: list[dict]
+) -> None:
     """Añade las recetas nuevas al INDEX.md antes de la línea '---' de cierre."""
-    contenido = index_path.read_text(encoding="utf-8")
+    contenido = await mcp_read(session, index_path)
     entradas = "".join(entrada_index(r) for r in recetas_nuevas)
 
-    # Insertar antes del último bloque '---\n' al final del archivo
     if "\n---\n" in contenido:
         pos = contenido.rfind("\n---\n")
         nuevo = contenido[:pos] + entradas + contenido[pos:]
     else:
         nuevo = contenido.rstrip() + "\n" + entradas
 
-    index_path.write_text(nuevo, encoding="utf-8")
+    await mcp_write(session, index_path, nuevo)
 
 
-def main() -> None:
-    api_key = os.environ.get("LLM_API_KEY")
-    vault_path_str = os.environ.get("VAULT_PATH")
-    model = os.environ.get("LLM_MODEL", "claude-haiku-4-5")
+# ── Lógica principal ──────────────────────────────────────────────────────────
 
-    if not api_key:
-        log.error("LLM_API_KEY no está definida")
-        sys.exit(1)
-    if not vault_path_str:
-        log.error("VAULT_PATH no está definida")
-        sys.exit(1)
-
-    vault = Path(vault_path_str)
-
+async def run(session: ClientSession, vault_root: str, api_key: str, model: str) -> None:
     # Calcular el lunes objetivo: si hoy es domingo, es el lunes de mañana;
     # si no, es el lunes de la semana en curso.
     hoy = date.today()
@@ -299,18 +314,18 @@ def main() -> None:
         lunes = hoy - timedelta(days=hoy.weekday())
 
     # Comprobar idempotencia
-    menu_dir = vault / "inbox" / "menus"
-    menu_path = menu_dir / f"menu-{lunes.strftime('%Y-%m-%d')}.md"
-    if menu_path.exists():
-        log.info("El menú de esta semana ya existe: %s — nada que hacer.", menu_path)
-        sys.exit(0)
+    menu_dir = f"{vault_root}/inbox/menus"
+    menu_path = f"{menu_dir}/menu-{lunes.strftime('%Y-%m-%d')}.md"
+    if await mcp_exists(session, menu_path):
+        log.info("El menú de esta semana ya existe — nada que hacer.")
+        return
 
     # Leer archivos de entrada
-    index_path = vault / "recetas" / "INDEX.md"
-    index_md = leer_archivo(index_path)
-    calendario_md = leer_archivo(vault / "recetas" / "calendario-productos-temporada.md")
-    recomendaciones_md = leer_archivo(vault / "recetas" / "recomendaciones-nutricionales.md")
-    plantilla_receta = leer_archivo(vault / "_templates" / "receta.md")
+    index_path = f"{vault_root}/recetas/INDEX.md"
+    index_md = await mcp_read(session, index_path)
+    calendario_md = await mcp_read(session, f"{vault_root}/recetas/calendario-productos-temporada.md")
+    recomendaciones_md = await mcp_read(session, f"{vault_root}/recetas/recomendaciones-nutricionales.md")
+    plantilla_receta = await mcp_read(session, f"{vault_root}/_templates/receta.md")
 
     # Construir contexto compacto
     recetas = extraer_recetas_del_index(index_md)
@@ -346,32 +361,50 @@ def main() -> None:
         else:
             r["archivo"] = archivo_slug
             recetas_nuevas_filtradas.append(r)
-
     datos["recetas_nuevas"] = recetas_nuevas_filtradas
 
     # Escribir menú
-    os.makedirs(menu_dir, exist_ok=True)
+    await mcp_mkdir(session, menu_dir)
     nota_menu = generar_nota_menu(datos, lunes)
-    menu_path.write_text(nota_menu, encoding="utf-8")
+    await mcp_write(session, menu_path, nota_menu)
     log.info("Menú guardado en: %s", menu_path)
 
     # Escribir recetas nuevas
-    recetas_dir = vault / "recetas"
+    recetas_dir = f"{vault_root}/recetas"
     for receta in datos["recetas_nuevas"]:
-        ruta_receta = recetas_dir / f"{receta['archivo']}.md"
-        if ruta_receta.exists():
+        ruta_receta = f"{recetas_dir}/{receta['archivo']}.md"
+        if await mcp_exists(session, ruta_receta):
             log.warning("El archivo de receta ya existe: %s — no se sobreescribe.", ruta_receta)
             continue
-        ruta_receta.write_text(receta["contenido_md"], encoding="utf-8")
+        await mcp_write(session, ruta_receta, receta["contenido_md"])
         log.info("Receta nueva: %s", ruta_receta)
 
     # Actualizar INDEX.md
     if datos["recetas_nuevas"]:
-        actualizar_index(index_path, datos["recetas_nuevas"])
+        await actualizar_index(session, index_path, datos["recetas_nuevas"])
         log.info("INDEX.md actualizado con %d receta(s) nueva(s).", len(datos["recetas_nuevas"]))
 
     log.info("Menú semanal generado correctamente.")
 
 
+async def main() -> None:
+    api_key = os.environ.get("LLM_API_KEY")
+    mcp_url = os.environ.get("MCP_VAULT_URL")
+    vault_root = os.environ.get("MCP_VAULT_ROOT", "/vault")
+    model = os.environ.get("LLM_MODEL", "claude-haiku-4-5")
+
+    if not api_key:
+        log.error("LLM_API_KEY no está definida")
+        sys.exit(1)
+    if not mcp_url:
+        log.error("MCP_VAULT_URL no está definida")
+        sys.exit(1)
+
+    async with sse_client(f"{mcp_url}/sse") as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            await run(session, vault_root, api_key, model)
+
+
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

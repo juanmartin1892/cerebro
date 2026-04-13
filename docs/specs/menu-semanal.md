@@ -8,7 +8,7 @@ Genera cada domingo un menú semanal orientativo con almuerzo y cena para 7 día
 
 ```cron
 # Cada domingo a las 9:00
-0 9 * * 0  /path/to/scripts/menu-semanal.py >> /var/log/cerebro/menu-semanal.log 2>&1
+0 9 * * 0  docker run --rm --network host --env-file /path/to/infra/scripts/.env cerebro/menu-semanal >> /var/log/cerebro/menu-semanal.log 2>&1
 ```
 
 ## Entradas
@@ -18,12 +18,13 @@ Genera cada domingo un menú semanal orientativo con almuerzo y cena para 7 día
 | Variable | Descripción | Ejemplo |
 |----------|-------------|---------|
 | `LLM_API_KEY` | API key de OpenCode Zen | `zen-abc123` |
-| `VAULT_PATH` | Ruta absoluta al vault de Obsidian | `/home/user/vault` |
+| `MCP_VAULT_URL` | URL base del servidor MCP del vault | `https://<host>:3100` |
 
 ### Variables de entorno opcionales
 
 | Variable | Descripción | Valor por defecto |
 |----------|-------------|-------------------|
+| `MCP_VAULT_ROOT` | Ruta raíz del vault dentro del MCP server | `/vault` |
 | `LLM_MODEL` | Modelo a usar en OpenCode Zen | `claude-haiku-4-5` |
 | `LOG_LEVEL` | Nivel de logging | `INFO` |
 
@@ -80,7 +81,8 @@ created: YYYY-MM-DD
 
 ## Dependencias Python
 
-Solo stdlib — no requiere instalar paquetes externos. Usa `urllib.request` para la llamada HTTP al endpoint `/messages` de OpenCode Zen.
+- **`mcp`** (PyPI) — cliente MCP para acceso al vault via SSE. Instalar con `pip install mcp`.
+- Stdlib: `asyncio`, `urllib.request` (llamada HTTP a OpenCode Zen).
 
 ## Comportamiento ante errores
 
@@ -126,9 +128,12 @@ Este diseño evita múltiples llamadas y mantiene el contexto mínimo necesario.
 
 ## Notas de implementación
 
-- Usar `anthropic.Anthropic(api_key=..., base_url="https://opencode.ai/zen/v1")` para apuntar a OpenCode Zen.
-- El directorio `$VAULT_PATH/inbox/menus/` debe crearse si no existe (`os.makedirs(..., exist_ok=True)`).
-- El nombre del archivo del menú usa la fecha del **lunes** de la semana en curso (`date.today() - timedelta(days=date.today().weekday())`).
+- Acceso al vault via MCP: `sse_client(MCP_VAULT_URL + "/sse")` → `ClientSession` → `session.call_tool(...)`.
+  - `read_file` / `write_file` / `get_file_info` / `create_directory` son las herramientas del filesystem MCP server.
+  - Los paths usan la ruta interna del container (`MCP_VAULT_ROOT`, por defecto `/vault`).
+- La lógica principal es `async`: `main()` usa `asyncio.run()`.
+- La llamada a la IA sigue siendo síncrona con `urllib.request` (no hay motivo para cambiarla).
+- El nombre del archivo del menú usa la fecha del **lunes** de la semana en curso.
 - Las entradas nuevas en `INDEX.md` se añaden antes de la línea `---` de cierre (o al final si no existe).
 - Los nombres de archivo de recetas nuevas deben ser kebab-case sin caracteres especiales (`unicodedata.normalize` + regex).
 - Si la IA propone como receta nueva una que ya existe en el INDEX, descartar y dejar solo las que sean genuinamente nuevas (comparación case-insensitive por nombre de archivo).
