@@ -8,6 +8,15 @@ services:
       - ${VAULT_PATH}:/vault
     restart: unless-stopped
 
+  grafana-mcp:
+    build: ./grafana-mcp
+    container_name: grafana-mcp
+    command: ["-transport", "sse", "-address", "0.0.0.0:8000"]
+    environment:
+      - GRAFANA_URL=${GRAFANA_URL}
+      - GRAFANA_API_KEY=${GRAFANA_API_KEY}
+    restart: unless-stopped
+
   caddy:
     image: caddy:2-alpine
     container_name: mcp-caddy
@@ -15,9 +24,11 @@ services:
       - TAILSCALE_HOST=${TAILSCALE_HOST}
     ports:
       - "${TAILSCALE_IP}:3100:3100"
+      - "${TAILSCALE_IP}:3101:3101"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - /etc/ssl/tailscale:/certs:ro
     depends_on:
       - filesystem-mcp
+      - grafana-mcp
     restart: unless-stopped

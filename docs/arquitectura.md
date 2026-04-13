@@ -82,3 +82,16 @@
 - **Qué**: autenticación en dos pasos para el usuario humano: clave SSH + código TOTP via `libpam-google-authenticator`; agentes usan solo clave (sin TOTP, no pueden interactuar con prompts)
 - **Por qué**: la clave SSH puede verse comprometida (máquina robada, clave exportada); TOTP añade un segundo factor independiente del dispositivo
 - **Alternativas descartadas**: solo clave SSH (factor único); contraseña + TOTP sin clave (menos seguro que publickey)
+
+### [2026-04-13] grafana-mcp como servidor MCP de observabilidad
+- **Qué**: servidor MCP (`mcp-grafana`) expuesto sobre SSE en el puerto `3101` via Caddy, dentro de `infra/mcp/`. Permite a Claude Code consultar métricas (PromQL vía Prometheus) y logs (LogQL vía Loki) directamente desde el chat, sin SSH.
+- **Por qué**: el stack de observabilidad ya estaba operativo pero solo era accesible via Grafana UI. Exponiéndolo como MCP se pueden hacer consultas en lenguaje natural (estado de la máquina, análisis de logs de autenticación, detección de anomalías) desde Claude Code con pleno contexto del proyecto.
+- **Cómo**: la imagen oficial no está publicada públicamente, se construye desde fuente con un Dockerfile multistage (`golang:1.26-alpine` → `alpine`). Se registra en Claude Code con `claude mcp add --transport sse grafana https://<TAILSCALE_HOST>:3101/sse`.
+- **Alternativas descartadas**: stdio local con Docker (funcional pero efímero, spawna un contenedor por sesión); exponer Prometheus/Loki directamente (APIs HTTP crudas, sin abstracción MCP)
+- **Configuración**: `infra/mcp/grafana-mcp/Dockerfile`. Credenciales en `.env` (gitignored): `GRAFANA_URL`, `GRAFANA_API_KEY`
+
+### [2026-04-13] fail2ban para mitigación de fuerza bruta SSH
+- **Qué**: fail2ban monitoriza `/var/log/auth.log` y banea automáticamente IPs que superan el umbral de fallos de autenticación añadiendo reglas a ufw. Configurado con `bantime=1d`, `findtime=10m`, `maxretry=5` — más agresivo que los defaults para reducir el ruido.
+- **Por qué**: cualquier VPS con puerto 22 expuesto recibe fuerza bruta continua de forma inevitable. fail2ban es el estándar para mitigarlo sin intervención manual. El 2FA y la autenticación por clave impiden el acceso real, pero sin fail2ban los intentos consumen recursos del sshd y saturan los logs.
+- **Alternativas descartadas**: sshguard (solo SSH, menos configurable), CrowdSec (más potente con inteligencia comunitaria, pero mayor complejidad operativa para este caso de uso), ufw manual (sin expiración automática de bans)
+- **Configuración**: `/etc/fail2ban/jail.local` en el VPS (no versionado — contiene detalles del entorno)
