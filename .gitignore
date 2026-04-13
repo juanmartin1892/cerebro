@@ -6,6 +6,8 @@ profiles/envs/*.env
 !profiles/envs/*.env.example
 infra/**/.env
 !infra/**/.env.example
+scripts/**/.env
+!scripts/**/.env.example
 
 # Archivos de Obsidian y sistema
 .obsidian/
