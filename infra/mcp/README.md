@@ -42,7 +42,8 @@ Ver `.env.example`. Copiar a `.env` y rellenar antes de arrancar.
 | `TAILSCALE_HOST` | Hostname Tailscale (p.ej. `cerebro.tail3e4af2.ts.net`) |
 | `VAULT_PATH` | Ruta absoluta al vault de Obsidian en el VPS |
 | `GRAFANA_URL` | URL de Grafana (`http://<TAILSCALE_IP>:3001`) |
-| `GRAFANA_API_KEY` | Token de service account de Grafana (rol Viewer) |
+| `GRAFANA_SERVICE_ACCOUNT_TOKEN` | Token de service account de Grafana (rol Viewer) |
+| `GRAFANA_ORG_ID` | ID de la org de Grafana (por defecto `1`) |
 
 ### Crear el service account de Grafana
 
