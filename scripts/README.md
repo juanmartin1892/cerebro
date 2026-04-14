@@ -32,13 +32,15 @@ Los scripts que necesiten credenciales las leen de variables de entorno o de un 
 
 ## Scripts disponibles
 
-### `menu-semanal.py`
+### `menu-semanal/`
 
 Genera cada domingo un menú semanal orientativo (almuerzo + cena para 7 días) usando las recetas disponibles en el vault. Propone dos recetas nuevas por ejecución, las escribe como notas Obsidian en `vault/recetas/` y actualiza `INDEX.md`. El menú se guarda en `vault/inbox/menus/menu-YYYY-MM-DD.md`.
 
-**Variables de entorno requeridas:** `LLM_API_KEY`, `VAULT_PATH`
-**Variables opcionales:** `LLM_MODEL` (default: `claude-haiku-4-5`), `LOG_LEVEL`
+Accede al vault via el MCP server (SSE). Se ejecuta como contenedor Docker.
+
+**Variables de entorno requeridas:** `LLM_API_KEY`, `MCP_VAULT_URL`
+**Variables opcionales:** `MCP_VAULT_ROOT` (default: `/vault`), `LLM_MODEL` (default: `claude-haiku-4-5`), `LOG_LEVEL`
 
 ```cron
-0 9 * * 0  /path/to/scripts/menu-semanal.py >> /var/log/cerebro/menu-semanal.log 2>&1
+0 9 * * 0  docker run --rm --network host --env-file /path/to/infra/scripts/.env cerebro/menu-semanal >> /var/log/cerebro/menu-semanal.log 2>&1
 ```
