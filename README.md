@@ -2,7 +2,7 @@
 
 ## Descripción
 
-Sistema agéntico personal para gestión de conocimiento, investigación y generación de documentos. Combina un vault de notas Markdown con un agente de IA accesible desde Telegram.
+Sistema agéntico personal para gestión de conocimiento, investigación y generación de documentos. Combina un vault de notas Markdown con un agente de IA accesible desde Open WebUI.
 
 ## Estado
 
@@ -10,11 +10,11 @@ Activo — en construcción iterativa
 
 ## Stack
 
-- **Agente IA**: OpenClaw (Docker)
+- **Interfaz IA**: Open WebUI (Docker)
 - **Automatización**: Scripts Python/Bash ejecutados via cron (ver `scripts/`)
 - **Vault de notas**: Obsidian + Syncthing
-- **Interfaz**: Telegram bot
-- **LLM**: Kimi K2.5
+- **Acceso**: Open WebUI web (Tailscale)
+- **LLM**: Kimi K2.5 via OpenCode Zen
 
 ## Estructura del repositorio
 
@@ -43,4 +43,4 @@ cerebro/
 
 ## Última actualización
 
-2026-04-12
+2026-04-18
