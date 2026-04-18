@@ -6,7 +6,7 @@
 - [OpenCode Zen Dashboard](https://opencode.ai/auth)
 
 ## Documentación
-- [OpenClaw Docs](https://docs.openclaw.ai)
+- [Open WebUI Docs](https://docs.openwebui.com)
 - [Syncthing Docs](https://docs.syncthing.net)
 - [Obsidian Help](https://help.obsidian.md)
 

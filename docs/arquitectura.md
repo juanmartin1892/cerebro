@@ -2,12 +2,14 @@
 
 ## Diagrama
 ```
-[Telegram móvil]
+[Open WebUI - móvil/escritorio - Tailscale]
       ↓
-[OpenClaw - Docker - VPS]
+[mcpo + filesystem-mcp - Docker - VPS]
+      ↓
+[Open WebUI - Docker - VPS]
   └── Kimi K2.5 via OpenCode Zen
-      ├── lee /workspace/vault/
-      └── escribe /workspace/vault/
+      ├── lee /vault/ via MCP
+      └── escribe /vault/ via MCP
               ↕ Syncthing
       ~/vault en CachyOS y Android
               ↕
@@ -25,10 +27,11 @@
 
 ## Decisiones tomadas
 
-### [2026-03-19] OpenClaw como motor agéntico
+### [2026-03-19] OpenClaw como motor agéntico _(reemplazado 2026-04-18 por Open WebUI)_
 - **Qué**: agente self-hosted con acceso nativo al filesystem
 - **Por qué**: lectura y escritura de .md sin intermediarios, interfaz via Telegram, sin necesidad de web UI
 - **Alternativas descartadas**: Khoj (problemas con OpenCode Zen y extended thinking), Dify (no escribe ficheros nativamente)
+- **Por qué se reemplazó**: causaba OOM al correr junto a Open WebUI; Open WebUI ofrece mayor control sobre modelos, system prompts y tools sin ser una caja negra
 
 ### [2026-03-19] Syncthing como capa de sincronización
 - **Qué**: sincronización P2P de ficheros .md entre dispositivos
@@ -89,6 +92,13 @@
 - **Cómo**: la imagen oficial no está publicada públicamente, se construye desde fuente con un Dockerfile multistage (`golang:1.26-alpine` → `alpine`). Se registra en Claude Code con `claude mcp add --transport sse grafana https://<TAILSCALE_HOST>:3101/sse`.
 - **Alternativas descartadas**: stdio local con Docker (funcional pero efímero, spawna un contenedor por sesión); exponer Prometheus/Loki directamente (APIs HTTP crudas, sin abstracción MCP)
 - **Configuración**: `infra/mcp/grafana-mcp/Dockerfile`. Credenciales en `.env` (gitignored): `GRAFANA_URL`, `GRAFANA_API_KEY`
+
+### [2026-04-18] Open WebUI como interfaz principal — sustitución de OpenClaw
+- **Qué**: Open WebUI self-hosted en Docker, accesible via Tailscale. Acceso al vault via mcpo + filesystem-mcp. Bot de Telegram eliminado.
+- **Por qué**: mayor control sobre modelos, system prompts y tools; interfaz web usable desde móvil y escritorio; OpenClaw causaba OOM al correr en paralelo
+- **Arquitectura de acceso al vault**: Open WebUI → mcpo (proxy HTTP→stdio) → filesystem-mcp (servidor MCP Anthropic oficial) → `/vault/`
+- **Modelos configurados**: Kimi K2.5 via OpenCode Zen como principal
+- **Alternativas descartadas**: mantener OpenClaw (OOM, caja negra, sin control granular de system prompts)
 
 ### [2026-04-13] fail2ban para mitigación de fuerza bruta SSH
 - **Qué**: fail2ban monitoriza `/var/log/auth.log` y banea automáticamente IPs que superan el umbral de fallos de autenticación añadiendo reglas a ufw. Configurado con `bantime=1d`, `findtime=10m`, `maxretry=5` — más agresivo que los defaults para reducir el ruido.
