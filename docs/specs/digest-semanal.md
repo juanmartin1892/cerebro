@@ -20,8 +20,8 @@ Ejecuta cada lunes a las 7:00 AM, cubriendo los 7 días anteriores.
 | Variable | Descripción | Ejemplo |
 |----------|-------------|---------|
 | `BRAVE_API_KEY` | Clave de la Brave Search API | `BSAabc123...` |
-| `ANTHROPIC_API_KEY` | Clave de la API de Anthropic (Claude) | `sk-ant-...` |
-| `VAULT_PATH` | Ruta absoluta a la raíz del vault | `/vault` |
+| `LLM_API_KEY` | Clave de la API de OpenCode Zen | `...` |
+| `VAULT_PATH` | Ruta absoluta a la raíz del vault | `/home/juan/vault` |
 
 ### Variables de entorno opcionales
 
@@ -29,7 +29,7 @@ Ejecuta cada lunes a las 7:00 AM, cubriendo los 7 días anteriores.
 |----------|-------------|-------------------|
 | `LOG_LEVEL` | Nivel de logging | `INFO` |
 | `DIGEST_DAYS` | Días hacia atrás a cubrir | `7` |
-| `CLAUDE_MODEL` | Modelo de Claude a usar | `claude-sonnet-4-6` |
+| `LLM_MODEL` | Modelo a usar | `claude-sonnet-4-6` |
 | `BRAVE_RESULTS_PER_TOPIC` | Resultados de Brave por topic | `5` |
 | `ARXIV_RESULTS_PER_TOPIC` | Papers de Arxiv por topic | `5` |
 
@@ -90,11 +90,7 @@ El script extrae el nombre de carpeta del enlace Obsidian (`[[carpeta/README|...
 
 ## Dependencias Python
 
-```
-# requirements (añadir a requirements.txt del proyecto si aplica)
-anthropic>=0.40
-requests>=2.31
-```
+Solo stdlib + módulos disponibles en el VPS. Sin dependencias externas.
 
 ## Comportamiento ante errores
 
@@ -113,4 +109,4 @@ requests>=2.31
 - Brave Search API endpoint: `https://api.search.brave.com/res/v1/web/search` con header `X-Subscription-Token`; añadir parámetro `freshness=pw` para resultados de la última semana
 - Arxiv API: `http://export.arxiv.org/api/query` con parámetros `search_query`, `start=0`, `max_results`, `sortBy=submittedDate`, `sortOrder=descending`; filtrar por fecha de submission >= fecha inicio de ventana
 - Prompt a Claude: incluir todos los títulos + snippets/abstracts recopilados; pedir resumen ejecutivo en español de 3-5 párrafos sobre el estado del arte de la semana
-- Usar `anthropic` SDK con prompt caching en el system prompt para reducir costes si hay múltiples proyectos
+- Llamadas a la IA via `urllib.request` directamente al endpoint `https://opencode.ai/zen/v1/messages` (mismo patrón que `menu-semanal`), sin SDK externo
