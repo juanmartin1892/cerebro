@@ -1,0 +1,38 @@
+services:
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    environment:
+      - OPENAI_API_BASE_URL=https://opencode.ai/zen/v1
+      - OPENAI_API_KEY=${OPENCODE_ZEN_API_KEY}
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+      - WEBUI_AUTH=true
+    volumes:
+      - open-webui-data:/app/backend/data
+    ports:
+      - "${TAILSCALE_IP}:8080:8080"
+    depends_on:
+      - mcpo
+    restart: unless-stopped
+    mem_limit: 900m
+
+  mcpo:
+    image: ghcr.io/open-webui/mcpo:main
+    container_name: mcpo
+    command: ["mcpo", "--config", "/app/config/config.json"]
+    volumes:
+      - ./mcpo-config.json:/app/config/config.json:ro
+    ports:
+      - "${TAILSCALE_IP}:8000:8000"
+    networks:
+      - default
+      - mcp_default
+    restart: unless-stopped
+
+volumes:
+  open-webui-data:
+
+networks:
+  mcp_default:
+    external: true
