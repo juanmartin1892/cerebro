@@ -9,6 +9,9 @@ infra/**/.env
 scripts/**/.env
 !scripts/**/.env.example
 
+# Informes generados por digest-semanal (artefactos de salida)
+informes/
+
 # Archivos de Obsidian y sistema
 .obsidian/
 .stfolder/
